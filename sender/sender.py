@@ -348,7 +348,6 @@ def send(endpoint, data):
     print('SENT DATA TO COLLECTOR: %s' % endpoint)
 
 
-
 if cadvisor_base is not None:
     # print('Starting cadvisor sender')
     get_cadvisor_metrics(endpoint, cadvisor_base)

@@ -1,4 +1,4 @@
-# Catalyze PaaS Metrics
+# Catalyze Docker Container Metrics
 
 Centralized collection of metrics for PaaS jobs/services. Each docker host runs a sender process (see the sender directory) that sends docker stats every minute to a central collection point. The collection point, collector, is a small Falcon API that reads in metrics and stores them in Influxdb. 
 
@@ -12,30 +12,30 @@ To run the components locally, check sender/sender.py and collector/collector.py
 
 First build the collector if not available locally:
 
-	sudo docker build -t collector ./collector
+    sudo docker build -t collector ./collector
 
 Then run it (adjust IPs and ports) with:
 
-	sudo docker run --name=collector \
-		--restart=on-failure:5 \
-		-e "COLLECTOR_PORT=8989" \
-		-e "COLLECTOR_INFLUXDB_NAME=metrics" \
-		-e "COLLECTOR_INFLUXDB_HOST=localhost" \
-		-e "COLLECTOR_INFLUXDB_PORT=8086" \
-		-e "INFLUXDB_ADMIN_USERNAME=root" \
-		-e "INFLUXDB_ADMIN_PASSWORD=root" \
-		-p 8989:8989 \
-		-t collector
+    sudo docker run --name=collector \
+        --restart=on-failure:5 \
+        -e "COLLECTOR_PORT=8989" \
+        -e "COLLECTOR_INFLUXDB_NAME=metrics" \
+        -e "COLLECTOR_INFLUXDB_HOST=localhost" \
+        -e "COLLECTOR_INFLUXDB_PORT=8086" \
+        -e "INFLUXDB_ADMIN_USERNAME=root" \
+        -e "INFLUXDB_ADMIN_PASSWORD=root" \
+        -p 8989:8989 \
+        -t collector
 
 If you have [docker compose](https://docs.docker.com/compose/) installed, edit /collector/docker-compose.yml accordingly and run:
 
-	docker-compose up
+    docker-compose up
 
 # Building Sender
 
 First build the sender with:
 
-	sudo docker build -t sender ./sender
+    sudo docker build -t sender ./sender
 
 # Running Sender
 
@@ -46,18 +46,18 @@ For docker versions >= 1.6 < 1.9
 
 Then run it (adjust IPs and ports) with:
 
-	sudo docker run --name=sender \
-		--restart=on-failure:5 \
-		-e "DOCKER_API_VERSION=1.20" \
-		-e "COLLECTOR_URL=http://0.0.0.0:8989/collector/metrics/" \
-		--volume=/var/run:/var/run:rw \
-		-t sender 
+    sudo docker run --name=sender \
+        --restart=on-failure:5 \
+        -e "DOCKER_API_VERSION=1.20" \
+        -e "COLLECTOR_URL=http://0.0.0.0:8989/collector/metrics/" \
+        --volume=/var/run:/var/run:rw \
+        -t sender 
 
 A table of docker versions and docker remote api versions can be found [here](https://docs.docker.com/engine/reference/api/docker_remote_api/).
 
 If you have [docker compose](https://docs.docker.com/compose/) installed, edit /sender/docker-compose.yml accordingly and run:
 
-	docker-compose up
+    docker-compose up
 
 ## With Cadvisor 
 For docker versions < 1.6
@@ -67,12 +67,12 @@ For docker versions < 1.6
 To run cadvisor, refer to the instructions in the [GitHub repo](https://github.com/google/cadvisor). The current versions of sender and collector work with cadvisor 0.9.0.
 
 Then run it (adjust IPs and ports) with:
-	
-	sudo docker run --name=sender \
-		--restart=on-failure:5 \
-		-e "CADVISOR_URL=http://localhost:8080/api/v1.2/" \
-		-e "COLLECTOR_URL=http://0.0.0.0:8989/collector/metrics/" \
-		-t sender
+    
+    sudo docker run --name=sender \
+        --restart=on-failure:5 \
+        -e "CADVISOR_URL=http://localhost:8080/api/v1.2/" \
+        -e "COLLECTOR_URL=http://0.0.0.0:8989/collector/metrics/" \
+        -t sender
 
 ## Accessing Metrics
 
@@ -92,14 +92,14 @@ Each entry is timestamped and tagged with the following tags.
 * **remote_ip**: the remote ip of the container, a string
 
 ### Network data:
-* Each **network.usage** section contains **tx_bytes**, **rx_bytes**, **tx_errors**, **rx_packets**, **tx_packets** and **rx_packets**
+* Each **network.usage** section contains **tx_bytes**, **rx_bytes**, **tx_errors**, **rx_errors**, **tx_packets** and **rx_packets**
 
 ### Memory data:
 * The **memory.usage** measurement contains **ave** (average), **min** (minimum) and **max** (maximum) fields
 * All values are in KB
 
 ### CPU data:
-* The **cpu.usage** section containes the number of jiffies from the beginining to the end of that minute. Cpu usage percentage will be added in the future.
+* The **cpu.usage** section containes the field **total** the total number of jiffies from the beginining to the end of that minute. CPU usage percentage will be added in the future.
 
 Here is an example entry:
  
@@ -155,8 +155,14 @@ Here is an example entry:
 ## Post-processing
 
 We run a number of scripts against the collected metrics to monitor customer applications and gain insights into potential load problems.
-For this initial release we will be providing an example script that aggregates metrics on a per-IP basis. 
+In the future we will be providing an example script that aggregates metrics on a per-IP basis. 
 This script is best run periodically via cron and then analyzed with something like [pandas](http://pandas.pydata.org/).
+Also you can use the Influxdb front end exposed on port 8083 to run queries such as 
+    
+    select * from "cpu.usage" limit 20
+
+to view the CPU usage data for the latest 20 metrics entries.  
+Also, visualization tools such as [grafana](http://grafana.org/) can be easily configured to work with influxdb.
 
 # Contributing
 
