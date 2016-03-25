@@ -1,0 +1,19 @@
+# Docker compose file to run collector and influxdb containers
+collector:
+    build: .
+    ports:
+        - 8989:8989
+    environment: #Replace this for whatever pod the collector is deployed for
+        COLLECTOR_INFLUXDB_HOST: localhost #Replace this for whatever the host for the influx container is
+        COLLECTOR_INFLUXDB_PORT: 8086
+        COLLECTOR_INFLUXDB_NAME: metrics
+        COLLECTOR_PORT: 8989 
+    container_name: collector
+influx:
+    image: tutum/influxdb:latest
+    environment:
+        PRE_CREATE_DB: metrics
+    ports:
+        - 8083:8083
+        - 8086:8086
+    container_name: influx

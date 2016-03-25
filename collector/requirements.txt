@@ -1,0 +1,5 @@
+falcon==0.1.8
+gunicorn
+py-dateutil
+requests
+influxdb

@@ -1,0 +1,1 @@
+*/1 * * * * sh /cron/bin/Cron/sender.sh 2>&1 | /usr/bin/logger -t sender
